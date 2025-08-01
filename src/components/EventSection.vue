@@ -32,8 +32,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { format } from 'date-fns'
-import { uk } from 'date-fns/locale'
 
 defineOptions({
   name: 'EventSection',
@@ -71,7 +69,27 @@ const addEvent = () => {
 }
 
 const formatEventDate = (dateString: string) => {
-  return format(new Date(dateString), 'dd MMMM yyyy', { locale: uk })
+  const date = new Date(dateString)
+  const day = date.getDate()
+  const month = date.getMonth()
+  const year = date.getFullYear()
+
+  const months = [
+    'січня',
+    'лютого',
+    'березня',
+    'квітня',
+    'травня',
+    'червня',
+    'липня',
+    'серпня',
+    'вересня',
+    'жовтня',
+    'листопада',
+    'грудня',
+  ]
+
+  return `${day} ${months[month]} ${year}`
 }
 </script>
 
@@ -180,16 +198,22 @@ const formatEventDate = (dateString: string) => {
   transform: scale(1.1);
 }
 
+/* Tablet styles */
 @media (max-width: 1024px) {
   .event-section {
     width: 100%;
-    max-height: 300px;
+    max-height: none;
+    overflow: visible;
   }
 }
 
+/* Mobile styles */
 @media (max-width: 768px) {
   .event-section {
     padding: 1.5rem;
+    max-height: none;
+    overflow: visible;
+    flex-shrink: 1;
   }
 
   .event-form {
@@ -207,6 +231,7 @@ const formatEventDate = (dateString: string) => {
   }
 }
 
+/* Small mobile styles */
 @media (max-width: 480px) {
   .event-section {
     padding: 1rem;

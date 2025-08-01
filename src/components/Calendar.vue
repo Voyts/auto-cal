@@ -13,7 +13,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import {
-  format,
   startOfMonth,
   endOfMonth,
   eachDayOfInterval,
@@ -27,7 +26,6 @@ import {
   isBefore,
   startOfDay,
 } from 'date-fns'
-import { uk } from 'date-fns/locale'
 import CalendarHeader from './CalendarHeader.vue'
 import CalendarGrid from './CalendarGrid.vue'
 import EventSection from './EventSection.vue'
@@ -57,7 +55,25 @@ const selectedDate = ref<Date | null>(null)
 const events = ref<Event[]>([])
 
 const currentMonthYear = computed(() => {
-  return format(currentDate.value, 'MMMM yyyy', { locale: uk })
+  const month = currentDate.value.getMonth()
+  const year = currentDate.value.getFullYear()
+
+  const months = [
+    'Січень',
+    'Лютий',
+    'Березень',
+    'Квітень',
+    'Травень',
+    'Червень',
+    'Липень',
+    'Серпень',
+    'Вересень',
+    'Жовтень',
+    'Листопад',
+    'Грудень',
+  ]
+
+  return `${months[month]} ${year}`
 })
 
 const calendarDays = computed(() => {
@@ -156,11 +172,14 @@ watch(
   .calendar-container {
     height: auto;
     min-height: 100vh;
+    overflow: visible;
   }
 
   .calendar-main {
     padding: 1rem;
     gap: 1rem;
+    overflow: visible;
+    flex: none;
   }
 }
 

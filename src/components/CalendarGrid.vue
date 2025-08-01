@@ -171,6 +171,15 @@ const weekdays = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 }
 
 @media (max-width: 768px) {
+  .calendar-grid {
+    flex: none;
+    height: auto;
+  }
+
+  .days-grid {
+    overflow: visible;
+  }
+
   .day {
     min-height: 50px;
   }
@@ -181,6 +190,11 @@ const weekdays = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 }
 
 @media (max-width: 480px) {
+  .calendar-grid {
+    flex: none;
+    height: auto;
+  }
+
   .day {
     min-height: 40px;
   }
