@@ -50,7 +50,7 @@ defineEmits<{
   selectDay: [day: CalendarDay]
 }>()
 
-const weekdays = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
 </script>
 
 <style scoped>

@@ -77,8 +77,8 @@ const currentMonthYear = computed(() => {
 })
 
 const calendarDays = computed(() => {
-  const start = startOfWeek(startOfMonth(currentDate.value))
-  const end = endOfWeek(endOfMonth(currentDate.value))
+  const start = startOfWeek(startOfMonth(currentDate.value), { weekStartsOn: 1 })
+  const end = endOfWeek(endOfMonth(currentDate.value), { weekStartsOn: 1 })
   const today = startOfDay(new Date())
 
   return eachDayOfInterval({ start, end }).map((date) => {
