@@ -7,6 +7,14 @@
 
       <EventSection :events="events" @add-event="addEvent" @remove-event="removeEvent" />
     </div>
+
+    <div class="locale-section">
+      <button @click="toggleLocale" class="locale-toggle">
+        {{ currentLocale === 'uk' ? '🇺🇸 Switch to English' : '🇺🇦 Перемкнути на українську' }}
+      </button>
+    </div>
+
+    <PWAInstall />
   </div>
 </template>
 
@@ -29,6 +37,8 @@ import {
 import CalendarHeader from './CalendarHeader.vue'
 import CalendarGrid from './CalendarGrid.vue'
 import EventSection from './EventSection.vue'
+import PWAInstall from './PWAInstall.vue'
+import { useLocale } from '../composables/useLocale'
 
 defineOptions({
   name: 'CalendarComponent',
@@ -40,6 +50,10 @@ interface CalendarDay {
   isCurrentMonth: boolean
   isToday: boolean
   hasEvent: boolean
+  hasStartEvent: boolean
+  hasEndEvent: boolean
+  dayColors: string[]
+  dayEvents: Array<Event & { type: 'start' | 'end' | 'middle' }>
   isSelected: boolean
   isPastDay: boolean
 }
@@ -48,7 +62,11 @@ interface Event {
   id: string
   title: string
   date: string
+  startDate?: string
+  color: string
 }
+
+const { locale, initLocale, toggleLocale, currentLocale } = useLocale()
 
 const currentDate = ref(new Date())
 const selectedDate = ref<Date | null>(null)
@@ -57,23 +75,7 @@ const events = ref<Event[]>([])
 const currentMonthYear = computed(() => {
   const month = currentDate.value.getMonth()
   const year = currentDate.value.getFullYear()
-
-  const months = [
-    'Січень',
-    'Лютий',
-    'Березень',
-    'Квітень',
-    'Травень',
-    'Червень',
-    'Липень',
-    'Серпень',
-    'Вересень',
-    'Жовтень',
-    'Листопад',
-    'Грудень',
-  ]
-
-  return `${months[month]} ${year}`
+  return `${locale.value.months[month]} ${year}`
 })
 
 const calendarDays = computed(() => {
@@ -83,12 +85,42 @@ const calendarDays = computed(() => {
 
   return eachDayOfInterval({ start, end }).map((date) => {
     const isPast = isBefore(startOfDay(date), today)
+
+    const dayEvents: Array<Event & { type: 'start' | 'end' | 'middle' }> = []
+
+    events.value.forEach((event) => {
+      const eventDate = new Date(event.date)
+      const startDate = event.startDate ? new Date(event.startDate) : null
+
+      if (startDate && isSameDay(date, startDate)) {
+        dayEvents.push({ ...event, type: 'start' })
+      }
+
+      if (isSameDay(date, eventDate)) {
+        dayEvents.push({ ...event, type: 'end' })
+      }
+
+      if (startDate && isBefore(startDate, date) && isBefore(date, eventDate) && !isToday(date)) {
+        dayEvents.push({ ...event, type: 'middle' })
+      }
+    })
+
+    const hasStartEvent = dayEvents.some((event) => event.type === 'start')
+    const hasEndEvent = dayEvents.some((event) => event.type === 'end')
+    const hasEvent = dayEvents.length > 0
+
+    const dayColors = [...new Set(dayEvents.map((event) => event.color))]
+
     return {
       date,
       dayNumber: date.getDate(),
       isCurrentMonth: isSameMonth(date, currentDate.value),
       isToday: isToday(date),
-      hasEvent: events.value.some((event) => isSameDay(date, new Date(event.date))),
+      hasEvent,
+      hasStartEvent,
+      hasEndEvent,
+      dayColors,
+      dayEvents,
       isSelected: selectedDate.value ? isSameDay(date, selectedDate.value) : false,
       isPastDay: isPast,
     }
@@ -122,6 +154,7 @@ const handleContainerClick = (event: MouseEvent) => {
 }
 
 onMounted(() => {
+  initLocale()
   const savedEvents = localStorage.getItem('calendar-events')
   if (savedEvents) {
     events.value = JSON.parse(savedEvents)
@@ -152,6 +185,37 @@ watch(
   overflow: hidden;
 }
 
+.locale-section {
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.locale-toggle {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.locale-toggle:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
 .calendar-main {
   flex: 1;
   display: flex;
@@ -180,6 +244,15 @@ watch(
     gap: 1rem;
     overflow: visible;
     flex: none;
+  }
+
+  .locale-section {
+    padding: 1rem;
+  }
+
+  .locale-toggle {
+    font-size: 0.8rem;
+    padding: 6px 12px;
   }
 }
 

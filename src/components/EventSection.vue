@@ -1,19 +1,49 @@
 <template>
   <div class="event-section">
-    <h3>Події</h3>
+    <h3>{{ locale.events.title }}</h3>
     <div class="event-form">
-      <input v-model="newEventTitle" type="text" placeholder="Назва події" class="event-input" />
-      <input v-model="newEventDate" type="date" class="event-input" />
-      <button @click="addEvent" class="add-event-btn">Додати подію</button>
+      <input
+        v-model="newEventTitle"
+        type="text"
+        :placeholder="locale.eventForm.title"
+        class="event-input"
+      />
+      <input
+        v-model="newEventStartDate"
+        type="date"
+        class="event-input"
+        :placeholder="locale.eventForm.startDate"
+      />
+      <input
+        v-model="newEventDate"
+        type="date"
+        class="event-input"
+        :placeholder="locale.eventForm.endDate"
+      />
+      <select v-model="newEventColor" class="event-input">
+        <option v-for="(label, color) in locale.eventColors" :key="color" :value="color">
+          {{ label }}
+        </option>
+      </select>
+      <button @click="addEvent" class="add-event-btn">{{ locale.eventForm.addButton }}</button>
     </div>
 
     <div class="events-list">
-      <div v-for="event in events" :key="event.id" class="event-item">
+      <div
+        v-for="event in events"
+        :key="event.id"
+        class="event-item"
+        :style="{ borderLeftColor: getEventColor(event.color) }"
+      >
         <div class="event-info">
           <span class="event-title">{{ event.title }}</span>
           <span class="event-date">{{ formatEventDate(event.date) }}</span>
+          <span v-if="event.startDate && event.startDate.trim()" class="event-start-date">
+            {{ locale.events.startDate }} {{ formatEventDate(event.startDate) }}
+          </span>
+          <span class="event-progress">{{ getEventProgress(event) }}</span>
         </div>
-        <button @click="$emit('removeEvent', event.id)" class="remove-event-btn">
+        <button @click="emit('removeEvent', event.id)" class="remove-event-btn">
           <svg
             width="16"
             height="16"
@@ -32,6 +62,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useLocale } from '../composables/useLocale'
 
 defineOptions({
   name: 'EventSection',
@@ -41,6 +72,8 @@ interface Event {
   id: string
   title: string
   date: string
+  startDate?: string
+  color: string
 }
 
 defineProps<{
@@ -52,44 +85,93 @@ const emit = defineEmits<{
   removeEvent: [eventId: string]
 }>()
 
+const { locale } = useLocale()
+
 const newEventTitle = ref('')
 const newEventDate = ref('')
+const newEventStartDate = ref('')
+const newEventColor = ref('blue')
 
 const addEvent = () => {
-  if (newEventTitle.value.trim() && newEventDate.value) {
-    const event: Event = {
-      id: Date.now().toString(),
-      title: newEventTitle.value.trim(),
-      date: newEventDate.value,
-    }
-    emit('addEvent', event)
-    newEventTitle.value = ''
-    newEventDate.value = ''
+  if (!newEventTitle.value.trim() || !newEventDate.value) return
+
+  const event: Event = {
+    id: Date.now().toString(),
+    title: newEventTitle.value.trim(),
+    date: newEventDate.value,
+    startDate: newEventStartDate.value.trim() ? newEventStartDate.value : undefined,
+    color: newEventColor.value,
   }
+  emit('addEvent', event)
+  newEventTitle.value = ''
+  newEventDate.value = ''
+  newEventStartDate.value = ''
+  newEventColor.value = 'blue'
 }
 
 const formatEventDate = (dateString: string) => {
-  const date = new Date(dateString)
-  const day = date.getDate()
-  const month = date.getMonth()
-  const year = date.getFullYear()
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return dateString
 
-  const months = [
-    'січня',
-    'лютого',
-    'березня',
-    'квітня',
-    'травня',
-    'червня',
-    'липня',
-    'серпня',
-    'вересня',
-    'жовтня',
-    'листопада',
-    'грудня',
-  ]
+    const day = date.getDate()
+    const month = locale.value.monthsGenitive[date.getMonth()]
+    const year = date.getFullYear()
 
-  return `${day} ${months[month]} ${year}`
+    return `${day} ${month} ${year}`
+  } catch {
+    return dateString
+  }
+}
+
+const getEventProgress = (event: Event) => {
+  try {
+    const today = new Date()
+    const eventDate = new Date(event.date)
+    const startDate = event.startDate ? new Date(event.startDate) : today
+
+    const totalDays = Math.ceil((eventDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    const passedDays = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+
+    if (totalDays <= 0) return locale.value.events.progress.alreadyHappened
+    if (passedDays < 0) return locale.value.events.progress.notStarted
+
+    const remainingDays = totalDays - passedDays
+
+    if (remainingDays <= 0) {
+      return locale.value.events.progress.completed.replace('{passed}', passedDays.toString())
+    }
+
+    return locale.value.events.progress.inProgress
+      .replace('{passed}', passedDays.toString())
+      .replace('{total}', totalDays.toString())
+      .replace('{remaining}', remainingDays.toString())
+  } catch {
+    return locale.value.events.progress.calculationError
+  }
+}
+
+const getEventColor = (color: string) => {
+  switch (color) {
+    case 'blue':
+      return '#4f46e5'
+    case 'green':
+      return '#10b981'
+    case 'red':
+      return '#ef4444'
+    case 'purple':
+      return '#9333ea'
+    case 'orange':
+      return '#f59e0b'
+    case 'pink':
+      return '#ec4899'
+    case 'yellow':
+      return '#facc15'
+    case 'teal':
+      return '#10b981'
+    default:
+      return '#4f46e5'
+  }
 }
 </script>
 
@@ -180,6 +262,19 @@ const formatEventDate = (dateString: string) => {
 .event-date {
   font-size: 0.9rem;
   color: #666;
+}
+
+.event-start-date {
+  font-size: 0.8rem;
+  color: #555;
+  margin-top: 0.25rem;
+}
+
+.event-progress {
+  font-size: 0.8rem;
+  color: #444;
+  margin-top: 0.25rem;
+  font-weight: 500;
 }
 
 .remove-event-btn {

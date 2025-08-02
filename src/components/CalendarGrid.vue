@@ -18,19 +18,22 @@
             'past-day': day.isPastDay,
           },
         ]"
+        :style="getDayBackgroundStyle(day)"
         @click="$emit('selectDay', day)"
       >
         <span class="day-number">{{ day.dayNumber }}</span>
-        <div v-if="day.hasEvent" class="event-indicator"></div>
+        <div v-if="day.hasEvent" class="event-indicators">
+          <span v-if="day.hasStartEvent" class="event-start">🚀</span>
+          <span v-if="day.hasEndEvent" class="event-end">🏁</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-defineOptions({
-  name: 'CalendarGrid',
-})
+import { computed } from 'vue'
+import { useLocale } from '../composables/useLocale'
 
 interface CalendarDay {
   date: Date
@@ -38,6 +41,17 @@ interface CalendarDay {
   isCurrentMonth: boolean
   isToday: boolean
   hasEvent: boolean
+  hasStartEvent: boolean
+  hasEndEvent: boolean
+  dayColors: string[]
+  dayEvents: Array<{
+    id: string
+    title: string
+    date: string
+    startDate?: string
+    color: string
+    type: 'start' | 'end' | 'middle'
+  }>
   isSelected: boolean
   isPastDay: boolean
 }
@@ -50,7 +64,53 @@ defineEmits<{
   selectDay: [day: CalendarDay]
 }>()
 
-const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
+const { locale } = useLocale()
+
+const weekdays = computed(() => locale.value.weekdays)
+
+const getEventColor = (color: string) => {
+  switch (color) {
+    case 'blue':
+      return '#4f46e5'
+    case 'green':
+      return '#10b981'
+    case 'red':
+      return '#ef4444'
+    case 'purple':
+      return '#9333ea'
+    case 'orange':
+      return '#f59e0b'
+    case 'pink':
+      return '#ec4899'
+    case 'yellow':
+      return '#facc15'
+    case 'teal':
+      return '#10b981'
+    default:
+      return '#4f46e5'
+  }
+}
+
+const getDayBackgroundStyle = (day: CalendarDay) => {
+  if (day.dayColors.length === 0) return {}
+
+  if (day.dayColors.length === 1) {
+    return {
+      background: `${getEventColor(day.dayColors[0])}15`,
+    }
+  }
+
+  if (day.dayColors.length === 2) {
+    return {
+      background: `linear-gradient(135deg, ${getEventColor(day.dayColors[0])}15 0%, ${getEventColor(day.dayColors[1])}15 100%)`,
+    }
+  }
+
+  const colors = day.dayColors.map((color) => `${getEventColor(color)}15`)
+  return {
+    background: `linear-gradient(135deg, ${colors.join(', ')})`,
+  }
+}
 </script>
 
 <style scoped>
@@ -142,14 +202,24 @@ const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
   position: relative;
 }
 
-.event-indicator {
-  width: 6px;
-  height: 6px;
-  background: #ffc107;
-  border-radius: 50%;
+.event-indicators {
   position: absolute;
-  bottom: 8px;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
   z-index: 3;
+}
+
+.event-start {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.event-end {
+  font-size: 0.7rem;
+  line-height: 1;
 }
 
 .days-grid::-webkit-scrollbar {

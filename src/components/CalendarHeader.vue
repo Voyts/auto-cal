@@ -2,8 +2,8 @@
   <div class="calendar-header">
     <button @click="$emit('previous')" class="nav-button">
       <svg
-        width="20"
-        height="20"
+        width="24"
+        height="24"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -12,11 +12,13 @@
         <path d="m15 18-6-6 6-6" />
       </svg>
     </button>
-    <h2 class="month-title">{{ monthYear }}</h2>
+
+    <h2 class="month-year">{{ monthYear }}</h2>
+
     <button @click="$emit('next')" class="nav-button">
       <svg
-        width="20"
-        height="20"
+        width="24"
+        height="24"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -47,68 +49,64 @@ defineEmits<{
 .calendar-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 1.5rem;
+  flex: 1;
   padding: 1.5rem 2rem;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .nav-button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 12px;
-  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: white;
+  backdrop-filter: blur(10px);
 }
 
 .nav-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.month-title {
-  color: white;
-  font-size: 1.5rem;
+.nav-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.month-year {
+  font-size: 1.6rem;
   font-weight: 600;
+  color: white;
   margin: 0;
-  text-transform: capitalize;
-}
-
-@media (max-width: 1024px) {
-  .calendar-header {
-    padding: 1rem 1.5rem;
-  }
-
-  .month-title {
-    font-size: 1.3rem;
-  }
+  text-align: center;
+  min-width: 200px;
 }
 
 @media (max-width: 768px) {
   .calendar-header {
-    padding: 1rem;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
   }
 
-  .month-title {
-    font-size: 1.2rem;
+  .month-year {
+    font-size: 1.3rem;
+    min-width: 160px;
   }
 
   .nav-button {
-    padding: 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .calendar-header {
-    padding: 0.75rem;
-  }
-
-  .month-title {
-    font-size: 1.1rem;
+    width: 40px;
+    height: 40px;
   }
 }
 </style>
